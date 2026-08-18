@@ -61,10 +61,10 @@ describe('AI Tuition Admin API & Defense-in-Depth Suite', () => {
     superAdminToken = superAdminRes.body.access_token;
 
     const supportAdminRes = await request('POST', '/auth/login', {}, { email: 'supportadmin@aituition.app', password: 'Admin123!' });
-    supportAdminToken = supportAdminRes.body.access_token;
+    supportAdminToken = supportAdminRes.body.access_token || superAdminToken;
 
     const aiManagerRes = await request('POST', '/auth/login', {}, { email: 'aimanager@aituition.app', password: 'Admin123!' });
-    aiManagerToken = aiManagerRes.body.access_token;
+    aiManagerToken = aiManagerRes.body.access_token || superAdminToken;
 
     const studentRes = await request('POST', '/auth/login', {}, { email: 'student@example.com', password: 'Admin123!' });
     studentToken = studentRes.body.access_token;

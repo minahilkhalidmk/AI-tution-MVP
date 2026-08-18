@@ -8,8 +8,6 @@ class InMemoryDatabase {
     const hashedPass = bcrypt.hashSync('Admin123!', 10);
     this.users = [
       { id: 1, full_name: 'Super Admin User', email: 'superadmin@aituition.app', password_hash: hashedPass, role: 'Super_Admin', status: 'active', created_at: new Date(), updated_at: new Date() },
-      { id: 2, full_name: 'Support Admin User', email: 'supportadmin@aituition.app', password_hash: hashedPass, role: 'Super_Admin', status: 'active', created_at: new Date(), updated_at: new Date() },
-      { id: 3, full_name: 'AI Manager User', email: 'aimanager@aituition.app', password_hash: hashedPass, role: 'Super_Admin', status: 'active', created_at: new Date(), updated_at: new Date() },
       { id: 4, full_name: 'Sample Student Ali Khan', email: 'student@example.com', password_hash: hashedPass, role: 'student', status: 'active', created_at: new Date(), updated_at: new Date() },
       { id: 5, full_name: 'Sample Tutor Sara Ahmed', email: 'tutor@example.com', password_hash: hashedPass, role: 'tutor', status: 'active', created_at: new Date(), updated_at: new Date() },
       { id: 6, full_name: 'Sample Parent Bilal Shah', email: 'parent@example.com', password_hash: hashedPass, role: 'parent', status: 'active', created_at: new Date(), updated_at: new Date() }

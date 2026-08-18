@@ -7,8 +7,6 @@ USE `ai_tuition_db`;
 
 INSERT INTO `users` (`id`, `full_name`, `email`, `password_hash`, `role`, `status`, `grade`) VALUES
 (1, 'Super Admin User', 'superadmin@aituition.app', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'Super_Admin', 'active', NULL),
-(2, 'Support Admin User', 'supportadmin@aituition.app', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'Super_Admin', 'active', NULL),
-(3, 'AI Manager User', 'aimanager@aituition.app', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'Super_Admin', 'active', NULL),
 (4, 'Sample Student Ali Khan', 'student@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'student', 'active', 10),
 (5, 'Sample Tutor Sara Ahmed', 'tutor@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'tutor', 'active', NULL),
 (6, 'Sample Parent Bilal Shah', 'parent@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'parent', 'active', NULL)
