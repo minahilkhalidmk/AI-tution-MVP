@@ -1,0 +1,384 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  Super_Admin
+  Support_Admin
+  AI_Manager
+  tutor
+  parent
+  student
+}
+
+enum AccountType {
+  institutional
+  private
+}
+
+enum AccountStatus {
+  active
+  suspended
+  banned
+}
+
+enum SourceType {
+  institution
+  parent
+}
+
+enum DiaryStatus {
+  pending
+  confirmed
+  quiz_generated
+}
+
+enum QuizStatus {
+  pending
+  completed
+  ungraded
+}
+
+enum TaskStatus {
+  pending
+  completed
+}
+
+model Institution {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  code       String   @unique @db.VarChar(50)
+  address    String?  @db.Text
+  created_at DateTime @default(now())
+
+  users   User[]
+  classes Class[]
+
+  @@map("institutions")
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  full_name      String        @db.VarChar(255)
+  email          String        @unique @db.VarChar(255)
+  password_hash  String        @db.VarChar(255)
+  role           Role          @default(student)
+  account_type   AccountType   @default(institutional)
+  institution_id Int?
+  status         AccountStatus @default(active)
+  student_code   String?       @unique @db.VarChar(10)
+  grade          Int?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+
+  institution Institution? @relation(fields: [institution_id], references: [id], onDelete: SetNull)
+
+  parent_links        ParentStudentLink[] @relation("ParentLinks")
+  student_links       ParentStudentLink[] @relation("StudentLinks")
+  sessions            UserSession[]
+  taught_classes      Class[]             @relation("TutorClasses")
+  enrollments         Enrollment[]
+  created_books       Book[]              @relation("UserBooks")
+  book_pages          BookPage[]          @relation("UserBookPages")
+  diary_entries       DiaryEntry[]
+  created_quizzes     Quiz[]              @relation("CreatedQuizzes")
+  quiz_submissions    QuizSubmission[]
+  tasks               Task[]
+  notifications       Notification[]
+  ai_usage_logs       AiUsageLog[]
+  flagged_moderations FlaggedModeration[]
+  audit_logs          AuditLog[]          @relation("AdminAuditLogs")
+  actor_audits        AcademicAuditLog[]  @relation("ActorAudits")
+  target_audits       AcademicAuditLog[]  @relation("TargetAudits")
+
+  @@index([email])
+  @@index([role])
+  @@index([institution_id])
+  @@index([student_code])
+  @@map("users")
+}
+
+model UserSession {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  refresh_token_hash String   @db.VarChar(255)
+  device_info        String?  @db.VarChar(255)
+  ip_address         String?  @db.VarChar(45)
+  expires_at         DateTime
+  is_revoked         Boolean  @default(false)
+  created_at         DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_revoked])
+  @@index([refresh_token_hash])
+  @@map("user_sessions")
+}
+
+model ParentStudentLink {
+  id                Int      @id @default(autoincrement())
+  parent_id         Int
+  student_id        Int
+  relationship_type String?  @default("parent") @db.VarChar(50)
+  created_at        DateTime @default(now())
+
+  parent  User @relation("ParentLinks", fields: [parent_id], references: [id], onDelete: Cascade)
+  student User @relation("StudentLinks", fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([parent_id, student_id], name: "uk_parent_student")
+  @@index([parent_id])
+  @@index([student_id])
+  @@map("parent_student_links")
+}
+
+model Class {
+  id             Int      @id @default(autoincrement())
+  institution_id Int?
+  teacher_id     Int
+  name           String   @db.VarChar(255)
+  subject        String   @db.VarChar(100)
+  grade          Int
+  created_at     DateTime @default(now())
+
+  institution Institution? @relation(fields: [institution_id], references: [id], onDelete: Cascade)
+  teacher     User         @relation("TutorClasses", fields: [teacher_id], references: [id], onDelete: Cascade)
+
+  enrollments Enrollment[]
+  quizzes     Quiz[]
+  tasks       Task[]
+
+  @@index([institution_id])
+  @@index([teacher_id])
+  @@map("classes")
+}
+
+model Enrollment {
+  id          Int      @id @default(autoincrement())
+  class_id    Int
+  student_id  Int
+  enrolled_at DateTime @default(now())
+
+  class   Class @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([class_id, student_id], name: "uk_class_student")
+  @@map("enrollments")
+}
+
+model Book {
+  id          Int        @id @default(autoincrement())
+  title       String     @db.VarChar(255)
+  author      String?    @default("Unknown") @db.VarChar(255)
+  subject     String     @db.VarChar(100)
+  grade       Int?
+  source_type SourceType
+  owner_id    Int
+  total_pages Int        @default(0)
+  created_at  DateTime   @default(now())
+
+  owner User @relation("UserBooks", fields: [owner_id], references: [id], onDelete: Cascade)
+
+  pages         BookPage[]
+  diary_entries DiaryEntry[]
+
+  @@index([source_type, owner_id])
+  @@map("books")
+}
+
+model BookPage {
+  id          Int        @id @default(autoincrement())
+  book_id     Int
+  page_number Int
+  page_text   String     @db.LongText
+  source_type SourceType
+  owner_id    Int
+  created_at  DateTime   @default(now())
+
+  book  Book @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  owner User @relation("UserBookPages", fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@unique([book_id, page_number], name: "uk_book_page")
+  @@index([book_id, page_number])
+  @@index([source_type, owner_id])
+  @@map("book_pages")
+}
+
+model DiaryEntry {
+  id                  Int         @id @default(autoincrement())
+  student_id          Int
+  title               String      @db.VarChar(255)
+  test_date           DateTime    @db.Date
+  book_id             Int
+  syllabus_start_page Int
+  syllabus_end_page   Int
+  status              DiaryStatus @default(pending)
+  created_at          DateTime    @default(now())
+
+  student User @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  book    Book @relation(fields: [book_id], references: [id], onDelete: Cascade)
+
+  quizzes   Quiz[]
+  questions Question[]
+
+  @@index([student_id])
+  @@index([book_id])
+  @@map("diary_entries")
+}
+
+model Quiz {
+  id         Int        @id @default(autoincrement())
+  class_id   Int?
+  diary_id   Int?
+  quiz_title String     @db.VarChar(255)
+  status     QuizStatus @default(pending)
+  created_by Int
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  class       Class?      @relation(fields: [class_id], references: [id], onDelete: SetNull)
+  diary_entry DiaryEntry? @relation(fields: [diary_id], references: [id], onDelete: SetNull)
+  creator     User        @relation("CreatedQuizzes", fields: [created_by], references: [id], onDelete: Cascade)
+
+  questions   Question[]
+  submissions QuizSubmission[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id             Int      @id @default(autoincrement())
+  quiz_id        Int
+  diary_id       Int?
+  question_text  String   @db.Text
+  options_json   Json
+  correct_option String   @db.VarChar(10)
+  explanation    String?  @db.Text
+  created_at     DateTime @default(now())
+
+  quiz        Quiz        @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  diary_entry DiaryEntry? @relation(fields: [diary_id], references: [id], onDelete: SetNull)
+
+  @@index([quiz_id])
+  @@map("questions")
+}
+
+model QuizSubmission {
+  id              Int      @id @default(autoincrement())
+  quiz_id         Int
+  student_id      Int
+  score           Int      @default(0)
+  total_questions Int      @default(0)
+  percentage      Decimal  @default(0.00) @db.Decimal(5, 2)
+  breakdown_json  Json?
+  submitted_at    DateTime @default(now())
+
+  quiz    Quiz @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  student User @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@index([quiz_id])
+  @@index([student_id])
+  @@map("quiz_submissions")
+}
+
+model Task {
+  id         Int        @id @default(autoincrement())
+  class_id   Int?
+  student_id Int
+  title      String     @db.VarChar(255)
+  status     TaskStatus @default(pending)
+  grade      Decimal?   @db.Decimal(5, 2)
+  due_date   DateTime?
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  class   Class? @relation(fields: [class_id], references: [id], onDelete: SetNull)
+  student User   @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  title      String   @db.VarChar(255)
+  message    String   @db.Text
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+  @@map("notifications")
+}
+
+model AiPrompt {
+  id                  Int      @id @default(autoincrement())
+  title               String   @db.VarChar(255)
+  system_prompt       String   @db.Text
+  learning_guardrails String   @db.Text
+  version             Int      @default(1)
+  updated_by          Int
+  updated_at          DateTime @updatedAt
+
+  @@map("ai_prompts")
+}
+
+model AiUsageLog {
+  id              Int      @id @default(autoincrement())
+  user_id         Int?
+  tokens_consumed Int      @default(0)
+  query_cost      Decimal  @default(0.000000) @db.Decimal(10, 6)
+  model_name      String   @default("gemini-3.5-flash") @db.VarChar(100)
+  timestamp       DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("ai_usage_logs")
+}
+
+model FlaggedModeration {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  input_content      String   @db.Text
+  output_content     String   @db.Text
+  violation_category String   @db.VarChar(100)
+  review_status      String   @default("pending") @db.VarChar(50)
+  flagged_at         DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("flagged_moderations")
+}
+
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  admin_id        Int
+  action_type     String   @db.VarChar(100)
+  target_resource String   @db.VarChar(255)
+  payload_delta   Json?
+  ip_address      String   @db.VarChar(45)
+  timestamp       DateTime @default(now())
+
+  admin User @relation("AdminAuditLogs", fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+model AcademicAuditLog {
+  id                Int      @id @default(autoincrement())
+  actor_id          Int
+  action_type       String   @db.VarChar(100)
+  target_student_id Int
+  details_json      Json?
+  timestamp         DateTime @default(now())
+
+  actor          User @relation("ActorAudits", fields: [actor_id], references: [id], onDelete: Cascade)
+  target_student User @relation("TargetAudits", fields: [target_student_id], references: [id], onDelete: Cascade)
+
+  @@map("academic_audit_logs")
+}
