@@ -1,0 +1,28 @@
+{
+  "name": "ai-tuition-backend",
+  "version": "1.0.0",
+  "description": "AI Tuition REST API Backend - Admin Module & Security Pipeline",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "setup-db": "node src/scripts/setupDb.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.0",
+    "express-validator": "^7.1.0",
+    "helmet": "^7.1.0",
+    "json2csv": "^5.0.7",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
+    "mysql2": "^3.10.0",
+    "pdf-parse": "^2.4.5",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
