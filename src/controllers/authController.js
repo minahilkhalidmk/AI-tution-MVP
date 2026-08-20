@@ -36,7 +36,8 @@ const authController = {
    */
   async register(req, res, next) {
     try {
-      const { full_name, email, password, role = 'student', account_type = 'institutional' } = req.body;
+      const { full_name, password, role = 'student', account_type = 'institutional' } = req.body;
+      const email = req.body.email ? String(req.body.email).trim().toLowerCase() : '';
 
       // 1. Check if email is already registered
       const [existing] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
@@ -53,17 +54,19 @@ const authController = {
       if (role === 'student') {
         // Ensure studentCode is unique in users table
         let isUnique = false;
-        while (!isUnique) {
+        let attempts = 0;
+        while (!isUnique && attempts < 10) {
+          attempts++;
           studentCode = generateStudentCode();
           const [codeCheck] = await db.execute('SELECT id FROM users WHERE student_code = ?', [studentCode]);
-          if (codeCheck.length === 0) {
+          if (!codeCheck || codeCheck.length === 0) {
             isUnique = true;
           }
         }
       }
 
       // 3. Hash password
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 6);
 
       // 4. Insert user record
       const [result] = await db.execute(
@@ -99,7 +102,8 @@ const authController = {
    */
   async login(req, res, next) {
     try {
-      const { email, password, device_info = 'Web Browser' } = req.body;
+      const { password, device_info = 'Web Browser' } = req.body;
+      const email = req.body.email ? String(req.body.email).trim().toLowerCase() : '';
 
       const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
       const user = rows[0];

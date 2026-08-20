@@ -3,14 +3,14 @@
 USE `ai_tuition_db`;
 
 -- Passwords below are hashed using bcrypt with salt 10 for 'Admin123!'
--- HASH: $2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G
+-- HASH: $2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O
 
 INSERT INTO `users` (`id`, `full_name`, `email`, `password_hash`, `role`, `status`, `grade`) VALUES
-(1, 'Super Admin User', 'superadmin@aituition.app', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'Super_Admin', 'active', NULL),
-(4, 'Sample Student Ali Khan', 'student@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'student', 'active', 10),
-(5, 'Sample Tutor Sara Ahmed', 'tutor@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'tutor', 'active', NULL),
-(6, 'Sample Parent Bilal Shah', 'parent@example.com', '$2a$10$Q78S1vG.hI/ZfV6/bA9j2.eH9c6mY2L7O5X1y3Z5a7B9c1D3E5F7G', 'parent', 'active', NULL)
-ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`), `grade` = VALUES(`grade`);
+(1, 'Super Admin User', 'superadmin@aituition.app', '$2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O', 'Super_Admin', 'active', NULL),
+(4, 'Sample Student Ali Khan', 'student@example.com', '$2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O', 'student', 'active', 10),
+(5, 'Sample Tutor Sara Ahmed', 'tutor@example.com', '$2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O', 'tutor', 'active', NULL),
+(6, 'Sample Parent Bilal Shah', 'parent@example.com', '$2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O', 'parent', 'active', NULL)
+ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`), `password_hash` = VALUES(`password_hash`), `grade` = VALUES(`grade`);
 
 -- Seed AI Prompts
 INSERT INTO `ai_prompts` (`id`, `title`, `system_prompt`, `learning_guardrails`, `version`, `updated_by`) VALUES

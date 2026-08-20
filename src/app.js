@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-require('dotenv').config();
 
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
@@ -28,10 +28,22 @@ app.use(helmet({
   hidePoweredBy: true
 }));
 
-// CORS Setup
+// Universal Multi-Platform CORS Setup (Supports Web, Android, iOS, Mac, Flutter, Emulators, Postman)
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
+  origin: (origin, callback) => {
+    // Native mobile apps (Android/iOS/Flutter/Mac) & local tools don't send an Origin header
+    if (!origin) return callback(null, true);
+
+    const configured = (process.env.CORS_ORIGIN || '*').split(',').map(s => s.trim());
+    if (configured.includes('*') || configured.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow cross-platform mobile apps, local web dev, and custom origin schemes
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 // Body Parsers & Cookie Parser
@@ -40,7 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET || 'cookie_signing_secret_ai_tuition'));
 
 // Interactive Swagger API Documentation Endpoint
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(['/api-docs', '/aituition/api-docs'], swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {

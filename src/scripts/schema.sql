@@ -239,3 +239,27 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 16. AI Prompts Table
+CREATE TABLE IF NOT EXISTS `ai_prompts` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `system_prompt` TEXT NOT NULL,
+  `learning_guardrails` TEXT NOT NULL,
+  `version` INT NOT NULL DEFAULT 1,
+  `updated_by` INT NOT NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 17. Flagged Moderations Table
+CREATE TABLE IF NOT EXISTS `flagged_moderations` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `input_content` TEXT NOT NULL,
+  `output_content` TEXT NOT NULL,
+  `violation_category` VARCHAR(100) NOT NULL,
+  `review_status` VARCHAR(50) NOT NULL DEFAULT 'pending',
+  `flagged_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

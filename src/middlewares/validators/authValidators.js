@@ -12,8 +12,7 @@ const authValidators = {
     body('email')
       .trim()
       .isEmail()
-      .withMessage('Valid email address is required.')
-      .normalizeEmail(),
+      .withMessage('Valid email address is required.'),
     body('password')
       .isLength({ min: 6 })
       .withMessage('Password must be at least 6 characters long.'),

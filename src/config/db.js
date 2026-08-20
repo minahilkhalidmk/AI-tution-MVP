@@ -5,7 +5,7 @@ require('dotenv').config();
 // In-Memory Database Fallback for development/testing when MySQL connection is inactive
 class InMemoryDatabase {
   constructor() {
-    const hashedPass = bcrypt.hashSync('Admin123!', 10);
+    const hashedPass = '$2a$10$3Yz4t2EGezimeYwKOIo7D.6BNL8Eij9ejN.gIL39m/bbw/6wIq7/O';
     this.users = [
       { id: 1, full_name: 'Super Admin User', email: 'superadmin@aituition.app', password_hash: hashedPass, role: 'Super_Admin', status: 'active', created_at: new Date(), updated_at: new Date() },
       { id: 4, full_name: 'Sample Student Ali Khan', email: 'student@example.com', password_hash: hashedPass, role: 'student', status: 'active', created_at: new Date(), updated_at: new Date() },
@@ -796,20 +796,27 @@ try {
     database: process.env.DB_NAME || 'ai_tuition_db',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 10000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000
   });
 } catch (e) {
   mysqlPool = null;
 }
 
-// Wrapper pool that falls back to in-memory store if MySQL isn't active
+// Wrapper pool that uses MySQL database when configured
 const pool = {
   async execute(sql, params) {
     if (mysqlPool) {
       try {
         return await mysqlPool.execute(sql, params);
       } catch (err) {
-        // If DB connection fails (e.g. MySQL server not running locally), fallback to in-memory DB
+        // If DB is configured via .env, rethrow error so connection reconnects properly
+        if (process.env.DB_HOST && process.env.DB_NAME) {
+          throw err;
+        }
+        // Fallback to in-memory DB only when DB is not configured locally
         return await memoryDb.executeQuery(sql, params);
       }
     } else {
